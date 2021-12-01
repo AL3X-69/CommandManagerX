@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>fr.alex6.discord</groupId>
-    <artifactId>CommandManagerX</artifactId>
-    <version>1.0.0</version>
+    <artifactId>command-manager-x</artifactId>
+    <version>1.0.1</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -48,6 +48,14 @@
             <version>2.13.0</version>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub AL3X-69 Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AL3X-69/CommandManagerX</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
