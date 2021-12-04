@@ -140,7 +140,7 @@ public class CommandManager extends ListenerAdapter {
         if (event.getAuthor().equals(event.getJDA().getSelfUser())) return;
         if (event.getMessage().getContentRaw().startsWith(prefix)) {
             String command = event.getMessage().getContentRaw().substring(prefix.length()).split(" ")[0];
-            String[] args = event.getMessage().getContentRaw().split(" ", 2).length == 1 ? new String[0] : event.getMessage().getContentRaw().split(" ", 2)[1].split(" ");
+            String[] args = event.getMessage().getContentRaw().substring(prefix.length()).split(" ", 2).length == 1 ? new String[0] : event.getMessage().getContentRaw().substring(prefix.length()).split(" ", 2)[1].split(" ");
             if (commands.containsKey(command)) {
                 CommandInfo commandInfo = commands.get(command);
                 if ((event.getAuthor().isBot() && !commandInfo.getCommand().replyToBot()) || event.isWebhookMessage()) return;
