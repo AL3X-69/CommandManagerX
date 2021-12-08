@@ -1,5 +1,6 @@
 package fr.alex6.discord.cmx;
 
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -133,6 +134,18 @@ public class CommandManager extends ListenerAdapter {
                 }
             }
         }
+    }
+
+    public void addJacksonModule(Module module) {
+        objectMapper.registerModule(module);
+    }
+
+    public void addJacksonModules(Module... modules) {
+        objectMapper.registerModules(modules);
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     @Override
