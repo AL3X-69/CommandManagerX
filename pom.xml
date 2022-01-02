@@ -6,7 +6,7 @@
 
     <groupId>fr.alex6.discord</groupId>
     <artifactId>command-manager-x</artifactId>
-    <version>1.0.3</version>
+    <version>1.2.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>4.3.0_330</version>
+            <version>4.4.0_350</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -35,17 +35,17 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.13.0</version>
+            <version>2.13.1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.0</version>
+            <version>2.13.1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.13.0</version>
+            <version>2.13.1</version>
         </dependency>
     </dependencies>
 
