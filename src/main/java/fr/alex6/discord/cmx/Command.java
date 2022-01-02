@@ -1,7 +1,5 @@
 package fr.alex6.discord.cmx;
 
-import fr.alex6.discord.cmx.CommandModule;
-import fr.alex6.discord.cmx.ExecutionRule;
 import net.dv8tion.jda.api.Permission;
 
 import java.lang.annotation.*;

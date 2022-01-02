@@ -4,22 +4,27 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fr.alex6.discord.cmx.hook.Event;
+import fr.alex6.discord.cmx.hook.EventHandlerInfo;
 import fr.alex6.discord.cmx.jackson.ColorJsonDeserializer;
 import fr.alex6.discord.cmx.jackson.ColorJsonSerializer;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.internal.utils.ClassWalker;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
 import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.BiConsumer;
@@ -31,7 +36,8 @@ import java.util.function.BiConsumer;
  */
 public class CommandManager extends ListenerAdapter {
     private final List<CommandModule> modules = new ArrayList<>();
-    private final Map<String, CommandInfo> commands = new HashMap<>();
+    private final Map<String, CommandInfo> commands = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<EventHandlerInfo>> eventHandlers = new ConcurrentHashMap<>();
     private final String prefix;
     private final ScheduledExecutorService scheduledExecutorService;
     private final CacheManager cacheManager;
@@ -73,6 +79,7 @@ public class CommandManager extends ListenerAdapter {
     public void registerModule(@NotNull CommandModule module) {
         Objects.requireNonNull(module);
         mapCommands(module);
+        mapEvents(module);
         modules.add(module);
         module.onRegister();
         module.registerTasks(scheduledExecutorService);
@@ -132,6 +139,17 @@ public class CommandManager extends ListenerAdapter {
                     if (commands.containsKey(alias)) throw new IllegalArgumentException("Duplicated command: Alias "+command.value()+" is already mapped");
                     commands.put(alias, new CommandInfo(command, method, module));
                 }
+            }
+        }
+    }
+
+    private void mapEvents(@NotNull CommandModule module) {
+        for (Method method : module.getClass().getMethods()) {
+            if (method.isAnnotationPresent(Event.class)) {
+                if (method.getParameterCount() == 0) throw new IllegalArgumentException("The event annotation must be followed by a method with a parameter extending GenericEvent");
+                Class<?> eventClass = method.getParameters()[0].getType();
+                if (!eventHandlers.containsKey(eventClass)) eventHandlers.put(eventClass, ConcurrentHashMap.newKeySet());
+                eventHandlers.get(eventClass).add(new EventHandlerInfo(eventClass, module, method));
             }
         }
     }
@@ -203,5 +221,23 @@ public class CommandManager extends ListenerAdapter {
                 }
             }
         }
+    }
+
+    @Override
+    public void onGenericEvent(@NotNull GenericEvent event) {
+        for (Class<?> eventClass : ClassWalker.range(event.getClass(), GenericEvent.class)) {
+            if (!eventHandlers.containsKey(eventClass)) continue;
+            for (EventHandlerInfo eventHandler : eventHandlers.get(eventClass)) {
+                try {
+                    eventHandler.getMethod().invoke(eventHandler.getModule(), event);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.getTargetException().printStackTrace();
+                }
+            }
+        }
+
+
     }
 }
