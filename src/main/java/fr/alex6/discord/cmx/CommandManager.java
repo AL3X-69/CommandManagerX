@@ -60,7 +60,14 @@ public class CommandManager extends ListenerAdapter {
     }
 
     private BiConsumer<MessageReceivedEvent, Permission[]> permissionsErrorHandler = (messageReceivedEvent, permissions) -> messageReceivedEvent.getMessage().reply(":x: Missing permissions: "+ Arrays.toString(permissions)).queue();
-    private BiConsumer<MessageReceivedEvent, Throwable> runtimeErrorHandler = (messageReceivedEvent, throwable) -> messageReceivedEvent.getMessage().reply(":x: An error occurred: "+throwable.getMessage()).queue();
+    private BiConsumer<GenericEvent, Throwable> runtimeErrorHandler = (genericEvent, throwable) -> {
+        if (genericEvent instanceof MessageReceivedEvent) {
+            ((MessageReceivedEvent) genericEvent).getMessage().reply(":x: An error occurred: "+throwable.getMessage()).queue();
+        } else {
+            System.err.println("Error while dealing with event "+genericEvent.getClass().getName());
+        }
+        throwable.printStackTrace();
+    };
 
     private void registerCustomJacksonModules(ObjectMapper objectMapper) {
         SimpleModule awtModule = new SimpleModule("AWT Module");
@@ -125,7 +132,7 @@ public class CommandManager extends ListenerAdapter {
      *
      * @param runtimeErrorHandler A <code>{@link BiConsumer}</code>
      */
-    public void setRuntimeErrorHandler(@NotNull BiConsumer<MessageReceivedEvent, Throwable> runtimeErrorHandler) {
+    public void setRuntimeErrorHandler(@NotNull BiConsumer<GenericEvent, Throwable> runtimeErrorHandler) {
         this.runtimeErrorHandler = runtimeErrorHandler;
     }
 
@@ -180,7 +187,7 @@ public class CommandManager extends ListenerAdapter {
                 if (event.getChannel() instanceof TextChannel) {
                     assert event.getMember() != null;
                     if (!event.getMember().getPermissions().containsAll(Arrays.asList(commandInfo.getCommand().permissions()))) {
-                        permissionsErrorHandler.accept(event, (Permission[]) Arrays.stream(commandInfo.getCommand().permissions()).filter(event.getMember().getPermissions()::contains).toArray());
+                        permissionsErrorHandler.accept(event, Arrays.stream(commandInfo.getCommand().permissions()).filter(event.getMember().getPermissions()::contains).toArray(Permission[]::new));
                         return;
                     }
                 }
@@ -216,7 +223,6 @@ public class CommandManager extends ListenerAdapter {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
-                    e.getTargetException().printStackTrace();
                     runtimeErrorHandler.accept(event, e.getTargetException());
                 }
             }
@@ -233,7 +239,7 @@ public class CommandManager extends ListenerAdapter {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
-                    e.getTargetException().printStackTrace();
+                    runtimeErrorHandler.accept(event, e.getTargetException());
                 }
             }
         }
